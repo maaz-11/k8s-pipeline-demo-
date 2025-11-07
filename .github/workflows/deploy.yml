@@ -1,4 +1,4 @@
-name: Build and Deploy to Kubernetes
+name: Build and Push Docker Image
 
 on:
   push:
@@ -7,46 +7,32 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout your repository
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Log in to Docker Hub
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Step 3: Build and push Docker image
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
+          # If your Dockerfile name/path is different, set file: path/to/Dockerfile
+          # file: ./Dockerfile
           push: true
           tags: |
             maaz111/k8s-pipeline-demo:latest
             maaz111/k8s-pipeline-demo:${{ github.sha }}
 
-      # Step 4: Set up kubectl
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v4
-
-      # Step 5: Configure kubeconfig for your EC2 cluster
-      - name: Configure kubeconfig
+      - name: Image digest (info)
         run: |
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-          kubectl version --client
-
-      # Step 6: Deploy new image to Kubernetes
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl set image deployment/k8s-demo-app \
-            k8s-demo-app=maaz111/k8s-pipeline-demo:${{ github.sha }} --record || true
-
-          kubectl rollout status deployment/k8s-demo-app --timeout=120s || true
+          echo "Image tags pushed:"
+          echo " - maaz111/k8s-pipeline-demo:latest"
+          echo " - maaz111/k8s-pipeline-demo:${{ github.sha }}"
