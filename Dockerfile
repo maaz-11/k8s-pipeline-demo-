@@ -1,14 +1,11 @@
-FROM nginx:alpine
+# Use official Nginx base image
+FROM nginx:latest
 
-   COPY index.html /usr/share/nginx/html/
+# Copy static files to Nginx web root
+COPY index.html /usr/share/nginx/html/index.html
 
-   EXPOSE 80
+# Expose port 80
+EXPOSE 80
 
-   CMD ["nginx", "-g", "daemon off;"]
-```
-
-   **Create `.dockerignore`:**
-```
-   .git
-   .gitignore
-   README.md
+# Start Nginx in foreground
+CMD ["nginx", "-g", "daemon off;"]
